@@ -17,6 +17,7 @@ This assumes:
 
 
 # Acknowledgements
+
 If you would like to reference our work, please use the following reference:
 ´´´
 @InProceedings{Scheibenreif_2024_CVPR,
