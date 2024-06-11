@@ -1,5 +1,5 @@
 # Parameter Efficient Self-Supervised Geospatial Domain Adaptation
-**[Paper](https://openaccess.thecvf.com/content/CVPR2024/papers/Scheibenreif_Parameter_Efficient_Self-Supervised_Geospatial_Domain_Adaptation_CVPR_2024_paper.pdf)** | **[Poster]()** | **[Slides]()** | **[Video](https://www.youtube.com/watch?v=SwmF-m5IBEw&t=8s)**
+**[Paper](https://openaccess.thecvf.com/content/CVPR2024/papers/Scheibenreif_Parameter_Efficient_Self-Supervised_Geospatial_Domain_Adaptation_CVPR_2024_paper.pdf)** | **[Poster](assets/16296_poster.pdf)** | **[Slides](https://cvpr.thecvf.com/media/cvpr-2024/Slides/31624.pdf)** | **[Video](https://www.youtube.com/watch?v=SwmF-m5IBEw&t=8s)** | **[CVPR Page](https://cvpr.thecvf.com/virtual/2024/poster/31624)**
 
 This repository contains code supporting the CVPR 2024 paper [Parameter Efficient Self-supervised Geospatial Domain Adaptation](https://openaccess.thecvf.com/content/CVPR2024/html/Scheibenreif_Parameter_Efficient_Self-Supervised_Geospatial_Domain_Adaptation_CVPR_2024_paper.html).
 
