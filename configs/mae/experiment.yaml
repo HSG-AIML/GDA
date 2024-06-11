@@ -1,0 +1,56 @@
+task: mae
+seed: 0
+verbose: True
+wandb:
+  mode: online
+  fast_dev_run: False
+  entity: lscheibenreif
+  project: low-rank-da-mae
+  log_model: True
+  experiment_dir: logs/mae
+  cache_dir: cache/
+data:
+  datamodule: Caltech256DataModule # BENGEDataModule # TreeSatAIDataModule # OSCDDataModule # DeepGlobeLandCoverDataModule # EuroSATSARDataModule # UCMercedDataModule # EuroSATSARDataModule # TreeSatAIDataModule # FireRiskDataModule # BENGEDataModule # RESISC45DataModule #TreeSatAIDataModule #EuroSATDataModule #FireRiskDataModule # RESISC45DataModule #BENGEDataModule #EuroSATDataModule
+  modality: s1 #aerial #s1
+  size: 6 #20
+  root: data/ #/netscratch/lscheibenreif/ben-ge-8k  # data/treesatai # deepglobe # # data/ # data/EuroSAT-SAR # data/ data/treesatai/ #
+  bands: null #[VV, VH, VV] # [NIR, R, G, B] #  #  #  # [B04, B03, B02] #  # # [VV, VH, VV/VH] # #  # #  #[B01, B02, B03, B04, B05, B06, B07, B08, B08A, B09, B11, B12] # [B04,B03,B02]
+  num_classes: 256 # 15 #7 #45 # 10 # 11
+  img_size: 224
+  few_shot_k: null
+  few_shot_seed: null
+model:
+  name: mae
+  type: mae
+  patch_size: 16
+  mask_ratio: 0.75
+  freeze_backbone: True
+  pretrained: True
+  input_res: 1
+  fixed_output_size: 0
+  use_mask_token: True
+  adapter: True
+  adapter_trainable: True
+  norm_trainable: True
+  only_bias_trainable: False
+  only_scaler_trainable: False
+  adapter_type: low-rank-scaling # lora
+  adapter_scale: 1.0
+  adapter_hidden_dim: 16
+  adapter_shared: False  # same adapter weights for every attention block
+  train_patch_embed: False
+  patch_embed_adapter: True
+  patch_embed_adapter_scale: 1
+  train_cls_mask_tokens: True
+  train_all_params: False  # overwrites all the above (freeze_backbone, train_patch_embed, adapter, adapter_shared)
+  loss_on_all_patches: True
+knn:
+  knn_eval: False
+  knn_k: 5
+optim:
+  lr: 0.0001
+  batch_size: 32
+  warmup_epochs: 5
+  num_workers: 0
+  min_steps: 10000
+  max_steps: 25000

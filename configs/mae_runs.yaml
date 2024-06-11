@@ -1,0 +1,89 @@
+sat_mae:
+  eurosat:
+    rgb:
+      img_size64:
+        patch_size16:
+          lora_r16: 1p10p6r7 # old normalization
+          lora_r16: dqkxcm92
+      img_size224:
+        patch_size16:
+          lora_r16: g8pxe2xt, a78f7rp3, x7eggmj3 (31.10.)
+          lora_r8: a250p7nw
+          lora_r4:
+    msi:
+      img_size224:
+        patch_size16:
+          lora_r8: sfoojls6
+
+  benge:
+    s1:
+      img_size224:
+        patch_size16:
+          lora_r8: pnhnusx6
+
+  resisc45:
+    img_size224:
+      patch_size16:
+        lora_r8: vfcnsnd3
+
+  firerisk:
+    img_size224:
+      patch_size16:
+        lora_r8: k9wx89q5
+
+scale_mae:
+  eurosat:
+    rgb:
+      img_size224:
+        patch_size16:
+          lora_r16: xxaagint
+    msi:
+      img_size224:
+        patch_size16:
+          lora_r8: o2oow562
+  benge:
+    s1:
+      img_size224:
+        patch_size16:
+          input_res10:
+            lora_r8: kc7u3y5s
+          input_res1:
+            lora_r8: aptg8zwr
+            with_patch_embed_adapter:
+              lora_r8: xu0vcgov
+
+  resisc45:
+    img_size224:
+      patch_size16:
+        input_res_1:
+          lora_r16: 0os9icg2
+
+  firerisk:
+    img_size224:
+      input_res1:
+        lora_r8: a8mxo4mo
+
+  treesatai:
+    img_size224:
+      patch_size16:
+        input_res1:
+          lora_r16: 97urvd7y
+
+mae:
+  eurosat:
+     rgb:
+      img_size224:
+        patch_size16:
+          lora_r8: i6gbfbcj
+    msi:
+      img_size224:
+        patch_size16:
+          lora_r8: ppm8b8zn, 
+          
+  firerisk: t7rdwmsu
+  resisc45: fwojfns2
+  benge-s1: 6vivgdyb
+  treesatai: gaqth03a
+   
+  
+

@@ -1,0 +1,14 @@
+run_id,dataset,mode,model
+sjf3w0n0,resisc45,ft,mae
+19d02xj7,resisc45,slr_ft,mae
+3brqlpzo,resisc45,ft_cont,mae
+1rida8wc,resisc45,lin_eval,mae
+0ky53mvn,resisc45,lin_eval_slr,mae
+qfb8iuyp,resisc45,lin_eval_cont,mae
+rkc38tgm,eurosat_sar,ft,mae
+shv4tke6,eurosat_sar,slr_ft,mae
+jt9m2u43,eurosat_sar,ft_cont,mae
+d3t47h5y,eurosat_sar,lin_eval,mae
+giwbqewd,eurosat_sar,lin_eval_slr,mae
+63492h9n,eurosat_sar,lin_eval_cont,mae
+

@@ -1,0 +1,64 @@
+task: lin_eval
+seed: 0
+continual_pretrain_run: byte40e5 # 6jxqsgfq # i6gbfbcj # thzyp0uh # xkk2ansu # tal70boa # 97urvd7y # a8mxo4mo # 8mqljd2q # t7rdwmsu # xu0vcgov # pnhnusx6 # 0os9icg2 # fwojfns2 # y29do21k # 94gc7ywm # null # i6gbfbcj # gxckrnje # 6jxqsgfq # gxckrnje #i6gbfbcj # 2kgdczn0 # afkqnf7c # kkhibo9q # fwojfns2 #b37wamj8 # xu0vcgov # null # 4sj9at5l # pyq77n5m #kkhibo9q # yn249xdf # 4sj9at5l # v0ty65bk # bkowqopx # afkqnf7c # 6ul0af5z # v4xfokkf # i6gbfbcj # b2nazlvi # 56p7cq5v # gxckrnje # 8mqljd2q # xu0vcgov # y29do21k # hjsdhpgj # gxckrnje # gaqth03a # i6gbfbcj # wx9n2r31 # 94gc7ywm #56p7cq5v # tal70boa # thzyp0uh #xkk2ansu # 97urvd7y # gaqth03a # t7rdwmsu # a8mxo4mo # k9wx89q5 # 6vivgdyb # gaqth03a # t7rdwmsu #6vivgdyb # fwojfns2 # i6gbfbcj #97urvd7y #zmihgaey # a8mxo4mo #97urvd7y #zmihgaey # a8mxo4mo # 0os9icg2 # k9wx89q5 # 0os9icg2 # a8mxo4mo ##6jxqsgfq #k9wx89q5 #xu0vcgov #6jxqsgfq # aptg8zwr #vfcnsnd3 # vfcnsnd3 #pnhnusx6 #xxaagint #x7eggmj3 #kc7u3y5s # xxaagint #x7eggmj3 #pnhnusx6 #x7eggmj3 #su1rpl64
+resume: null # 1rida8wc
+verbose: True
+wandb:
+  mode: online
+  fast_dev_run: False
+  entity: lscheibenreif
+  project: low-rank-da-lin_eval
+  log_model: True
+  experiment_dir: logs/lin_eval
+  cache_dir: cache/
+data:
+  datamodule: Caltech256DataModule   # EuroSATSARDataModule # RESISC45DataModule # BENGEDataModule # TreeSatAIDataModule # TreeSatAIDataModule # TreeSatAIDataModule #RESISC45DataModule # FireRiskDataModule #EuroSATDataModule # TreeSatAIDataModule  #FireRiskDataModule  BENGEDataModule #EuroSATDataModule RESISC45DataModule 
+  modality: null # s1 # s1 # aerial #s1 #aerial # s1 #aerial # s1
+  size: 6
+  root: data/ # /netscratch/lscheibenreif/ben-ge-8k # data/ #data/EuroSAT-SAR # treesatai # data/EuroSAT-SAR #  # data/treesatai/ # # data/
+  bands: null # [B04,B03,B02] # [NIR, R, G, B] # [VV,VH,VV] # [B04,B03,B02] # [VV, VH, VV]  #   # #  #  #   #  # #  # #  # #  #  #[NIR, R, G, B] #  null
+  num_classes: 256 # 15 # 15 # 7 #11 #45 # 11
+  img_size: 224
+  few_shot_k: null # 100 # 100
+  few_shot_seed: null # 2
+model:
+  name: mae
+  type: ""
+  patch_size: 16
+  embed_dim: 1024
+  freeze_backbone: True
+  pretrained: True
+  input_res: 1.
+  fixed_output_size: 0
+  adapter: True
+  adapter_type: low-rank-scaling # ia3 # low-rank-scaling
+  adapter_scale: 1.0
+  adapter_hidden_dim: 16
+  adapter_shared: False  # same adapter weights for every attention block
+  adapter_trainable: True
+  only_scaler_trainable: False
+  only_bias_trainable: False
+  norm_trainable: True
+  train_patch_embed: False
+  patch_embed_adapter: True
+  patch_embed_adapter_scale: 1
+  train_cls_mask_tokens: False
+  train_all_params: False  # overwrites all the above (freeze_backbone, train_patch_embed, adapter, adapter_shared)
+  loss_on_all_patches: True
+knn:
+  knn_eval: False
+  knn_k: 5
+optim:
+  lr: 0.0001 # default 0.0001
+  head_lr: 0.0005 # 0.001 # 0.001 # 0.0001 #0.001 # default null
+  batch_size: 32 # default 32, 8 for few shot
+  use_lr_scheduler: True
+  warmup_epochs: 5
+  lr_schedule_patience: 5
+  num_workers: 0
+  min_steps: 10000 # 1000 # default 10000
+  max_steps: 25000 # 3000 # default 25000
+  # min_epochs: 100
+  # max_epochs: 150 # for k=100
+val_every_n_epoch: 1 
+

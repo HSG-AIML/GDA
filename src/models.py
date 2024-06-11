@@ -1,26 +1,30 @@
 import functools
-import yaml
 import re
+
 import timm
 import torch
-from src.utils import Dotdict
 
-import src.mae.models_mae as mae_models_mae
-import src.mae.models_vit as mae_models_vit
+import src.utils
+import src.t_few_lora
+import src.pos_embed
+import src.patch_embed
 
-import src.sat_mae.models_vit as sat_mae_models_vit
-import src.sat_mae.models_mae as sat_mae_models_mae
-import src.sat_mae.models_vit_temporal as sat_mae_models_vit_temporal
-import src.sat_mae.models_vit_group_channels as sat_mae_models_vit_group_channels
+# mae imports
+import src.mae.models_mae
+import src.mae.models_vit
 
-import src.scale_mae.models_vit as scale_mae_models_vit
-import src.scale_mae.models_mae as scale_mae_models_mae
-from src.scale_mae.util.pos_embed import interpolate_pos_embed
+# sat-mae imports
+import src.sat_mae.models_mae
+import src.sat_mae.models_vit
+import src.sat_mae.models_mae
+import src.sat_mae.models_vit_group_channels
+import src.sat_mae.models_vit_temporal
+import src.sat_mae.models_vit_group_channels
 
-import src.prithvi.Prithvi as prithvi_mae_models_vit
-from src.t_few_lora import LoRALinear
-from src.pos_embed import resample_abs_pos_embed
-from src.patch_embed import resample_patch_embed
+# scale_mae imports
+import src.scale_mae.models_mae
+import src.scale_mae.models_vit
+import src.scale_mae.util.pos_embed
 
 
 class ResidualSequential(torch.nn.Module):
@@ -409,7 +413,7 @@ def add_ia3_weights(model, config):
                     setattr(
                         module,
                         c_name,
-                        LoRALinear(
+                        src.t_few_lora.LoRALinear(
                             layer,
                             config.lora_rank,
                             config.lora_scaling_rank,
@@ -494,88 +498,6 @@ def set_adapter_requires_grad(model, train=True):
     return trainable_params
 
 
-def get_prithvi(
-    model_type,
-    pretrained=True,
-    num_classes=1000,
-    in_chans=3,
-    patch_size=16,
-    img_size=224,
-    num_frames=1,  # number of stacked temporal frames
-):
-    """return the Prithvi 100M model
-    note: this was trained on temporal sequences of 6 images"""
-
-    with open("src/prithvi/Prithvi_100M_config.yaml", "r") as f:
-        params = Dotdict(yaml.safe_load(f))
-
-    model = prithvi_mae_models_vit.MaskedAutoencoderViT(
-        img_size=params.img_size,
-        patch_size=params.patch_size,
-        num_frames=params.num_frames,
-        tubelet_size=params.tubelet_size,
-        in_chans=len(params.bands),
-        embed_dim=params.embed_dim,
-        depth=params.depth,
-        num_heads=params.num_heads,
-        decoder_embed_dim=params.decoder_embed_dim,
-        decoder_depth=params.decoder_depth,
-        decoder_num_heads=params.decoder_num_heads,
-        mlp_ratio=4.0,
-        norm_layer=functools.partial(torch.nn.LayerNorm, eps=1e-6),
-        norm_pix_loss=False,
-    )
-
-    if pretrained:
-        checkpoint = torch.load(
-            "checkpoints/prithvi/Prithvi_100M.pt", map_location=torch.device("cpu")
-        )
-        model.load_state_dict(checkpoint)
-
-        if num_frames == 1:
-            assert img_size == 224
-            assert in_chans == 3
-            assert patch_size == 16
-            # take pos_embed corresponding to first temporal frame
-            model.pos_embed = torch.nn.Parameter(
-                model.pos_embed[:, : (224 // 16) ** 2 + 1, :]
-            )
-            model.decoder_pos_embed = torch.nn.Parameter(
-                model.decoder_pos_embed[:, : (224 // 16) ** 2 + 1, :]
-            )
-
-    if model_type == "":
-        model.head = torch.nn.Linear(params.embed_dim, num_classes)
-        model.forward = model.classifier
-        del model.decoder_blocks
-        del model.decoder_embed
-        del model.decoder_norm
-        del model.decoder_pred
-
-    elif model_type == "mae" and num_frames == 1:
-        # adjust decoder for input image size (no temporal dim)
-        model.decoder_pred = torch.nn.Linear(
-            params.decoder_embed_dim, params.tubelet_size * patch_size**2 * in_chans
-        )
-
-    # adjust to downstream img shape
-    if in_chans != len(params.bands) or patch_size != params.patch_size:
-        print(f"Re-initializing patch embedding for {in_chans=}, {patch_size=}")
-        # model.patch_embed = timm.models.vision_transformer.PatchEmbed(
-        model.patch_embed = prithvi_mae_models_vit.PatchEmbed(
-            img_size=img_size,
-            patch_size=patch_size,
-            in_chans=in_chans,
-            tubelet_size=params.tubelet_size,
-            embed_dim=params.embed_dim,
-        )
-
-    del checkpoint
-    torch.cuda.empty_cache()
-
-    return model
-
-
 def get_vit_l_imagenet(
     pretrained=True, num_classes=1000, in_chans=3, img_size=224, patch_size=16
 ):
@@ -601,7 +523,7 @@ def get_mae(
         assert patch_size == 16
         assert img_size == 224
         # assert in_chans % 3 == 0
-        model = mae_models_mae.mae_vit_large_patch16_dec512d8b(in_chans=in_chans)
+        model = src.mae.models_mae.mae_vit_large_patch16_dec512d8b(in_chans=in_chans)
 
         if pretrained:
             # checkpoint with decode head
@@ -647,7 +569,7 @@ def get_mae(
         assert patch_size == 16
         assert img_size == 224
         # assert in_chans == 3
-        model = mae_models_vit.vit_large_patch16(in_chans=in_chans)
+        model = src.mae.models_vit.vit_large_patch16(in_chans=in_chans)
         if pretrained:
             checkpoint = torch.load(
                 "/netscratch/lscheibenreif/code/low-rank-da/checkpoints/mae/mae_pretrain_vit_large.pth"
@@ -689,18 +611,7 @@ def get_scale_mae(
 
     print(f"{args.model=}")
     if model_type == "mae":
-        # model = scale_mae_models_mae.__dict__["MaskedAutoencoderViT"](
-        #    patch_size=args.patch_size,
-        #    img_size=args.input_size,
-        #    in_chans=args.in_chans,
-        #    fixed_output_size=fixed_output_size,
-        #    use_mask_token=use_mask_token,
-        #    decoder_depth=3,
-        #    fcn_layers=2,
-        # fpn_layers=2,
-        #    fcn_dim=512,
-        # )
-        model = scale_mae_models_mae.mae_vit_large_patch16_dec512d8b(
+        model = src.scale_mae.models_mae.mae_vit_large_patch16_dec512d8b(
             img_size=args.input_size,
             in_chans=args.in_chans,
             fixed_output_size=0,
@@ -717,7 +628,7 @@ def get_scale_mae(
             progressive=False,
         )
     else:
-        model = scale_mae_models_vit.__dict__[args.model](
+        model = src.scale_mae.models_vit.__dict__[args.model](
             img_size=args.input_size,
             num_classes=args.nb_classes,
             global_pool=args.global_pool,
@@ -725,7 +636,7 @@ def get_scale_mae(
             # patch_size=args.patch_size,
         )
 
-    interpolate_pos_embed(model, checkpoint["model"])
+    src.scale_mae.util.pos_embed.interpolate_pos_embed(model, checkpoint["model"])
 
     if pretrained:
         ckpt_patch_embed_weight = checkpoint["model"]["patch_embed.proj.weight"]
@@ -872,13 +783,13 @@ def get_sat_mae(
             args.grouped_bands = [[0, 1, 2, 6], [3, 4, 5, 7], [8, 9]]
 
     if model_type == "temporal":
-        model = sat_mae_models_vit_temporal.__dict__[args.model](
+        model = src.sat_mae.models_vit_temporal.__dict__[args.model](
             num_classes=args.nb_classes,
             drop_path_rate=args.drop_path,
             global_pool=args.global_pool,
         )
     elif model_type == "group_c":
-        model = sat_mae_models_vit_group_channels.__dict__[args.model](
+        model = src.sat_mae.models_vit_group_channels.__dict__[args.model](
             patch_size=args.patch_size,
             img_size=args.input_size,
             in_chans=args.in_chans,
@@ -889,13 +800,13 @@ def get_sat_mae(
         )
     elif model_type == "mae":
         # return mae model including decoder
-        model = sat_mae_models_mae.__dict__["MaskedAutoencoderViT"](
+        model = src.sat_mae.models_mae.__dict__["MaskedAutoencoderViT"](
             patch_size=args.patch_size,
             img_size=args.input_size,
             in_chans=args.in_chans,
         )
     else:
-        model = sat_mae_models_vit.__dict__[args.model](
+        model = src.sat_mae.models_vit.__dict__[args.model](
             patch_size=args.patch_size,
             img_size=args.input_size,
             in_chans=args.in_chans,
@@ -943,11 +854,13 @@ def get_sat_mae(
             print(f"Resampling patch embedding for new patch size: {args.patch_size}")
             print(f"final decoder pred layer randomly initialized")
             patch_size_factor = orig_patch_size / args.patch_size
-            checkpoint["model"]["patch_embed.proj.weight"] = resample_patch_embed(
-                checkpoint["model"]["patch_embed.proj.weight"].cpu(),
-                model.patch_embed.proj.weight.shape[-2:],
-                interpolation="bilinear",
-                antialias=False,
+            checkpoint["model"]["patch_embed.proj.weight"] = (
+                src.patch_embed.resample_patch_embed(
+                    checkpoint["model"]["patch_embed.proj.weight"].cpu(),
+                    model.patch_embed.proj.weight.shape[-2:],
+                    interpolation="bilinear",
+                    antialias=False,
+                )
             )
             # if patch size changed, final decoder prediction layer (token -> pixels) does not fit anymore
             del checkpoint["model"]["decoder_pred.weight"]
@@ -956,18 +869,20 @@ def get_sat_mae(
             print(
                 f"Resampling positional embeddings for new image size: {args.input_size}"
             )
-            checkpoint["model"]["pos_embed"] = resample_abs_pos_embed(
+            checkpoint["model"]["pos_embed"] = src.pos_embed.resample_abs_pos_embed(
                 checkpoint["model"]["pos_embed"],
                 new_size=(args.input_size, args.input_size),
                 old_size=(224, 224),
                 size_factor=patch_size_factor,
             )
             if model_type == "mae":
-                checkpoint["model"]["decoder_pos_embed"] = resample_abs_pos_embed(
-                    checkpoint["model"]["decoder_pos_embed"],
-                    new_size=(args.input_size, args.input_size),
-                    old_size=(224, 224),
-                    size_factor=patch_size_factor,
+                checkpoint["model"]["decoder_pos_embed"] = (
+                    src.pos_embed.resample_abs_pos_embed(
+                        checkpoint["model"]["decoder_pos_embed"],
+                        new_size=(args.input_size, args.input_size),
+                        old_size=(224, 224),
+                        size_factor=patch_size_factor,
+                    )
                 )
         missing, unexpected = model.load_state_dict(checkpoint["model"], strict=False)
         print(f"missing weights: {missing}")
@@ -1031,27 +946,6 @@ def get_model(**hparams):
             patch_size=hparams["patch_size"],
             img_size=hparams["input_size"],
         )
-    elif hparams["model"] == "prithvi":
-        model = get_prithvi(
-            pretrained=hparams["pretrained"],
-            num_classes=hparams["num_classes"],
-            in_chans=hparams["in_channels"],
-            patch_size=hparams["patch_size"],
-            img_size=hparams["input_size"],
-        )
-        # model.patch_embed = timm.models.vision_transformer.PatchEmbed(
-        #     img_size=hparams["input_size"],
-        #     patch_size=hparams["patch_size"],
-        #     in_chans=hparams["in_channels"],
-        #     embed_dim=hparams["embed_dim"],
-    #  )
-    # model.pos_embed = torch.nn.Parameter(
-    #     model.pos_embed[
-    #         :,
-    #         : (hparams["input_size"] // hparams["patch_size"]) ** 2 + 1,
-    #         :,
-    #     ]
-    #  )
 
     if hparams["freeze_backbone"]:
         for param in model.parameters():

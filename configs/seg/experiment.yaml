@@ -1,0 +1,60 @@
+task: segmentation
+continual_pretrain_run: pnhnusx6 # 6vivgdyb # pnhnusx6 # kc7u3y5s #6vivgdyb # kc7u3y5s # pnhnusx6
+seed: 2
+verbose: True
+wandb:
+  mode: online
+  fast_dev_run: False
+  entity: lscheibenreif
+  project: low-rank-da-seg
+  log_model: True
+  experiment_dir: logs/seg
+  cache_dir: cache/
+data:
+  datamodule: BENGEDataModule #EuroSATDataModule
+  modality: s1
+  root: /netscratch/lscheibenreif/ben-ge-8k # data/
+  bands: null #[B01, B02, B03, B04, B05, B06, B07, B08, B08A, B09, B11, B12] # [B04,B03,B02]
+  num_classes: 11 # 10
+  img_size: 224
+  few_shot_k: null
+  few_shot_seed: null
+model:
+  name: fcn # upernet
+  backbone: sat_mae
+  backbone_type: ""
+  feature_map_indices: [5, 11, 17, 23]
+  patch_size: 16
+  freeze_backbone: True
+  pretrained: True
+  input_res: 10
+  fixed_output_size: 0
+  embed_dim: 1024
+  use_mask_token: True
+  adapter: True
+  adapter_trainable: False
+  norm_trainable: False
+  adapter_type: low-rank-scaling
+  adapter_scale: 1.0
+  adapter_hidden_dim: 8
+  adapter_shared: False  # same adapter weights for every attention block
+  train_patch_embed: False
+  patch_embed_adapter: False
+  patch_embed_adapter_scale: 1
+  train_cls_mask_tokens: False
+  train_all_params: False  # overwrites all the above (freeze_backbone, train_patch_embed, adapter, adapter_shared)
+  loss_on_all_patches: True
+  only_scaler_trainable: False
+  only_bias_trainable: False
+knn:
+  knn_eval: False
+  knn_k: 5
+optim:
+  lr: 0.000001
+  batch_size: 32
+  warmup_epochs: 5
+  num_workers: 0
+  min_steps: 10000
+  max_steps: 25000
+  aux_loss_factor: 0.1
+  lr_schedule_patience: 10

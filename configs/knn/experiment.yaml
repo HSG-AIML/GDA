@@ -1,0 +1,47 @@
+task: knn
+knn_k: 10
+seed: 0
+continual_pretrain_run: x7eggmj3 #ppm8b8zn #xxaagint # su1rpl64
+test: True # apply model to test set
+verbose: True
+wandb:
+  mode: online
+  fast_dev_run: False
+  entity: lscheibenreif
+  project: low-rank-da-knn_eval
+  log_model: False
+  experiment_dir: logs/knn_eval
+  cache_dir: cache/
+data:
+  datamodule: EuroSATDataModule
+  bands: [B04, B03, B02] #[B01, B02, B03, B04, B05, B06, B07, B08, B08A, B09, B11, B12] # [B04,B03,B02]
+  num_classes: 10
+  img_size: 224
+  few_shot_k: 10 
+  few_shot_seed: 0
+model:
+  name: sat_mae
+  type: "mae"
+  patch_size: 16
+  embed_dim: 1024
+  freeze_backbone: True
+  pretrained: True
+  input_res: 1.0
+  fixed_output_size: 0
+  adapter: True
+  adapter_type: low-rank-scaling
+  adapter_scale: 1.0
+  adapter_hidden_dim: 16 
+  adapter_shared: False  # same adapter weights for every attention block
+  train_patch_embed: False
+  patch_embed_adapter: False
+  patch_embed_adapter_scale: 0.1
+  train_cls_mask_tokens: False
+  train_all_params: False  # overwrites all the above (freeze_backbone, train_patch_embed, adapter, adapter_shared)
+  loss_on_all_patches: True
+  use_mask_token: 0
+optim:
+  batch_size: 128
+  num_workers: 0
+  lr: 0.1
+  lr_schedule_patience: 5

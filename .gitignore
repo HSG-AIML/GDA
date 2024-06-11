@@ -1,0 +1,14 @@
+.ipynb_checkpoints/
+data/
+__pycache__/
+logs/
+lightning_logs/
+*.pth
+*.ckpt
+.vscode/
+wandb/
+mae_logs/
+cache/
+outputs/
+figures/
+overview.yaml
