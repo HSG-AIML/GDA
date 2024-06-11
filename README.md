@@ -6,14 +6,16 @@ This repository contains code supporting the CVPR 2024 paper [Parameter Efficien
 
 # Background
 
-# Foundation Models
+# Getting Started
+
+## Foundation Models
 ### MAE
 
 ### SatMAE
 
 ### Scale-MAE
 
-# Datasets
+## Datasets
 ### EuroSAT
 
 ### RESISC45
@@ -32,8 +34,6 @@ This repository contains code supporting the CVPR 2024 paper [Parameter Efficien
 * `torchgeo==0.5.0`
 * `timm==0.6.12`
 * `torch==2.0.1`
-
-# Getting Started
 
 
 # Acknowledgements
