@@ -2,7 +2,7 @@
 
 This repository contains code supporting the CVPR 2024 paper [Parameter Efficient Self-supervised Geospatial Domain Adaptation](https://openaccess.thecvf.com/content/CVPR2024/html/Scheibenreif_Parameter_Efficient_Self-Supervised_Geospatial_Domain_Adaptation_CVPR_2024_paper.html).
 
-![Overview image](overview_v2.jpg "Method Overview")
+![Overview image](assets/overview_v2.jpg "Method Overview")
 
 ## Versions
 This assumes:
