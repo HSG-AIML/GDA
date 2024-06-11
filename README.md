@@ -14,17 +14,18 @@ As large-scale foundation models become publicly available for different domains
 This codebase provides scripts to add SLR adapters to existing, trained, visual foundation models before fine-tuning them on different downstream tasks. To get started, make sure that the trained weights for a visual foundation model are available in the ´checkpoints/´ directory and download a dataset for training.
 See below for the models and datasets used in the paper: 
 
-## Foundation Models
-### MAE
+## Models
+**MAE**
 * [Project](https://github.com/facebookresearch/mae)
 * [ViT-L Encoder](https://dl.fbaipublicfiles.com/mae/pretrain/mae_pretrain_vit_large.pth)
 * [ViT-L Encoder-Decoder](https://dl.fbaipublicfiles.com/mae/visualize/mae_visualize_vit_large.pth)
-### SatMAE
+
+**SatMAE**
 * [Project](https://github.com/sustainlab-group/SatMAE)
 * [FMoW Model](https://zenodo.org/record/7369797/files/fmow_pretrain.pth)
 * [FMoW Temporal Model](https://zenodo.org/record/7369797/files/pretrain_fmow_temporal.pth)
 
-### Scale-MAE
+**Scale-MAE**
 * [Project](https://github.com/bair-climate-initiative/scale-mae)
 
 ## Datasets
