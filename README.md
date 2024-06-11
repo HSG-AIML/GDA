@@ -3,6 +3,8 @@
 
 This repository contains code supporting the CVPR 2024 paper [Parameter Efficient Self-supervised Geospatial Domain Adaptation](https://openaccess.thecvf.com/content/CVPR2024/html/Scheibenreif_Parameter_Efficient_Self-Supervised_Geospatial_Domain_Adaptation_CVPR_2024_paper.html).
 
+Authors: [Linus Scheibenreif](scheibenreif.github.io)    [Michael Mommert](https://mommermi.github.io) [Damian Borth](https://ics.unisg.ch/chairs/damian-borth-artificial-intelligence-and-machine-learning/)
+
 ![Overview image](assets/overview_v2.jpg "Method Overview")
 
 # Background
