@@ -1,52 +1,48 @@
-import os
-
-
-os.environ["OMP_NUM_THREADS"] = "4"  # export OMP_NUM_THREADS=4
-os.environ["OPENBLAS_NUM_THREADS"] = "4"  # export OPENBLAS_NUM_THREADS=4
-os.environ["MKL_NUM_THREADS"] = "4"  # export MKL_NUM_THREADS=6
-os.environ["VECLIB_MAXIMUM_THREADS"] = "4"  # export VECLIB_MAXIMUM_THREADS=4
-os.environ["NUMEXPR_NUM_THREADS"] = "4"  # export NUMEXPR_NUM_THREADS=6
-os.environ["GDAL_NUM_THREADS"] = "4"
+"""Main script for linear evaluation of fine-tuned models."""
 
 import hydra
-from omegaconf import OmegaConf
+import lightning.pytorch
+import omegaconf
 import torch
-from lightning.pytorch import Trainer
 import wandb
 
-import src.utils as utils
-from src.trainers.linear_eval import LinearEvaluationTask
-from src.trainers.knn_eval import KNNEval
+import src.utils
+import src.trainers.linear_eval
+import src.trainers.knn_eval
+
+src.utils.set_resources(num_threads=4)
 
 
 @hydra.main(version_base=None, config_path="configs/lin_eval", config_name="experiment")
 def main(cfg):
-    config = utils.Dotdict(
-        OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
+    config = src.utils.Dotdict(
+        omegaconf.OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
     )
     if "scale_mae" in config.model.name:
         assert hasattr(config.model, "input_res"), "input_res is required for scale-mae"
     if config.optim.use_lr_scheduler:
         assert config.val_every_n_epoch == 1
 
-    run, wandb_logger, config = utils.setup_wandb(config)
-    utils.set_seed(config.seed)
-    datamodule, config = utils.get_datamodule(config)
-    callbacks = utils.get_callbacks(run.dir)
+    run, wandb_logger, config = src.utils.setup_wandb(config)
+    src.utils.set_seed(config.seed)
+    datamodule, config = src.utils.get_datamodule(config)
+    callbacks = src.utils.get_callbacks(run.dir)
 
     if config.continual_pretrain_run is not None:
         print(f"Reading config of pre-train run.. {config.continual_pretrain_run=}")
-        pretrain_args = utils.get_config_from_wandb_run(config)
-        utils.assert_model_compatibility(pretrain_args, config)
+        pretrain_args = src.utils.get_config_from_wandb_run(config)
+        src.utils.assert_model_compatibility(pretrain_args, config)
 
     if config.resume is not None:
         print(f"Reading config of earlier run.. {config.resume=}")
-        pretrain_args, ckpt_path = utils.get_config_from_wandb_run(
+        pretrain_args, ckpt_path = src.utils.get_config_from_wandb_run(
             config, run_id_key="resume", return_ckpt_path=True
         )
-        utils.assert_model_compatibility(pretrain_args, config, ignore=["embed_dim"])
+        src.utils.assert_model_compatibility(
+            pretrain_args, config, ignore=["embed_dim"]
+        )
 
-    task = LinearEvaluationTask(
+    task = src.trainers.linear_eval.LinearEvaluationTask(
         model=config.model.name,
         model_type=config.model.type,
         num_classes=config.data.num_classes,
@@ -81,12 +77,12 @@ def main(cfg):
 
     if config.continual_pretrain_run is not None:
         print(f"Loading weights from pre-train run...")
-        task.model = utils.load_weights_from_wandb_run(task.model, config)
+        task.model = src.utils.load_weights_from_wandb_run(task.model, config)
 
     accelerator = "gpu" if torch.cuda.is_available() else "cpu"
 
     if hasattr(config.optim, "max_steps") and config.optim.max_steps is not None:
-        trainer = Trainer(
+        trainer = lightning.pytorch.Trainer(
             fast_dev_run=config.wandb.fast_dev_run,
             # callbacks=[checkpoint_callback, early_stopping_callback], these will be overridden by callbacks in the task
             logger=[wandb_logger],
@@ -98,7 +94,7 @@ def main(cfg):
             check_val_every_n_epoch=config.val_every_n_epoch,
         )
     elif hasattr(config.optim, "max_epochs") and config.optim.max_epochs is not None:
-        trainer = Trainer(
+        trainer = lightning.pytorch.Trainer(
             fast_dev_run=config.wandb.fast_dev_run,
             # callbacks=[checkpoint_callback, early_stopping_callback], these will be overridden by callbacks in the task
             logger=[wandb_logger],
@@ -142,7 +138,7 @@ def main(cfg):
     )
 
     if config.knn.knn_eval:
-        knn = KNNEval(
+        knn = src.trainers.knn_eval.KNNEval(
             task.model,
             train_dataloader=datamodule.train_dataloader(),
             val_dataloader=datamodule.val_dataloader(),
@@ -156,7 +152,7 @@ def main(cfg):
 
     updated_configs = {}
     for k, v in config.__dict__.items():
-        if isinstance(v, utils.Dotdict):
+        if isinstance(v, src.utils.Dotdict):
             updated_configs[k] = v.__dict__
         else:
             updated_configs[k] = v

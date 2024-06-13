@@ -1,9 +1,12 @@
+"""Segmentation model definitions."""
+
 import math
-import torch
-from einops import rearrange
+
+import einops
 import mmseg
-from mmseg.models.necks import MultiLevelNeck
-from mmseg.models.decode_heads import UPerHead, FCNHead
+import mmseg.models.necks
+import mmseg.models.decode_heads
+import torch
 
 
 class UPerNetWrapper(torch.nn.Module):
@@ -17,10 +20,10 @@ class UPerNetWrapper(torch.nn.Module):
         self.vit_backbone = vit_backbone
         self.deepsup = deepsup
         norm_cfg = dict(type="BN", eps=1e-6)
-        self.neck = MultiLevelNeck(
+        self.neck = mmseg.models.necks.MultiLevelNeck(
             in_channels=[1024] * 4, out_channels=1024, scales=[4, 2, 1, 0.5]
         )
-        self.head = UPerHead(
+        self.head = mmseg.models.decode_heads.UPerHead(
             in_channels=[1024] * 4,
             in_index=[0, 1, 2, 3],
             pool_scales=(1, 2, 3, 6),
@@ -31,7 +34,7 @@ class UPerNetWrapper(torch.nn.Module):
             align_corners=False,
         )
         if self.deepsup:
-            self.aux_head = FCNHead(
+            self.aux_head = mmseg.models.decode_heads.FCNHead(
                 in_channels=1024,
                 in_index=3,
                 channels=256,
@@ -76,7 +79,8 @@ class UPerNetWrapper(torch.nn.Module):
 
         h = w = int(math.sqrt(features[0].shape[1] - 1))
         features = [
-            rearrange(z[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w) for z in features
+            einops.rearrange(z[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w)
+            for z in features
         ]
         features = self.neck(features)
 
@@ -112,7 +116,8 @@ class UPerNetWrapper(torch.nn.Module):
         # remove cls token reshape into maps
         h = w = int(math.sqrt(features[0].shape[1] - 1))
         features = [
-            rearrange(z[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w) for z in features
+            einops.rearrange(z[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w)
+            for z in features
         ]
         features = self.neck(features)
 
@@ -151,7 +156,7 @@ class ViTWithFCNHead(torch.nn.Module):
         self.backbone = backbone
         self.deepsup = False
         norm_cfg = dict(type="BN", eps=1e-6)
-        self.head = FCNHead(
+        self.head = mmseg.models.decode_heads.FCNHead(
             in_channels=1024,
             in_index=0,
             channels=256,
@@ -187,7 +192,7 @@ class ViTWithFCNHead(torch.nn.Module):
         if isinstance(features, list):
             h = w = int(math.sqrt(features[0].shape[1] - 1))
             features = [
-                rearrange(f[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w)
+                einops.rearrange(f[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w)
                 for f in features
             ]
             # note: this belongs below at output_map
@@ -203,7 +208,9 @@ class ViTWithFCNHead(torch.nn.Module):
             # ]
         else:
             h = w = int(math.sqrt(features.shape[1] - 1))
-            features = rearrange(features[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w)
+            features = einops.rearrange(
+                features[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w
+            )
             features = [features]
 
         output_map = self.head(features)
@@ -238,7 +245,10 @@ class ViTWithFCNHead(torch.nn.Module):
 
         if not isinstance(feat, list):
             feat = [feat]
-        feat = [rearrange(f[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w) for f in feat]
+        feat = [
+            einops.rearrange(f[:, 1:, :], "b (h w) d -> b d h w", h=h, w=w)
+            for f in feat
+        ]
 
         output_map = self.head(feat)
         output_map = self.resize(
