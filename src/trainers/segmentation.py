@@ -1,36 +1,24 @@
-"""Trainers for image classification linear evaluation."""
-import os
-
-
-os.environ["OMP_NUM_THREADS"] = "4"  # export OMP_NUM_THREADS=4
-os.environ["OPENBLAS_NUM_THREADS"] = "4"  # export OPENBLAS_NUM_THREADS=4
-os.environ["MKL_NUM_THREADS"] = "4"  # export MKL_NUM_THREADS=6
-os.environ["VECLIB_MAXIMUM_THREADS"] = "4"  # export VECLIB_MAXIMUM_THREADS=4
-os.environ["NUMEXPR_NUM_THREADS"] = "4"  # export NUMEXPR_NUM_THREADS=6
-os.environ["GDAL_NUM_THREADS"] = "4"
+"""Trainer for image segmentation."""
 
 from typing import Any, Optional
-from functools import partial
 
 import torch
-import torch.nn as nn
-from torch import Tensor
 import numpy as np
 import PIL
-import timm
 import matplotlib.pyplot as plt
 from torchmetrics import MetricCollection
 from torchmetrics.classification import (
     MulticlassAccuracy,
     MulticlassJaccardIndex,
 )
-
 import torchgeo
 import torchgeo.trainers
-from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 
-import src.models as models
-import src.models_segmentation as segmentation_models
+import src.models
+import src.models_segmentation
+import src.utils
+
+src.utils.set_resources(num_threads=4)
 
 
 class SegmentationTrainer(torchgeo.trainers.SemanticSegmentationTask):
@@ -63,7 +51,7 @@ class SegmentationTrainer(torchgeo.trainers.SemanticSegmentationTask):
         patch_embed_adapter=False,
         patch_embed_adapter_scale=1.0,
         train_all_params=False,
-        class_weights: Optional[Tensor] = None,
+        class_weights: Optional[torch.Tensor] = None,
         ignore_index: Optional[int] = None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -80,16 +68,16 @@ class SegmentationTrainer(torchgeo.trainers.SemanticSegmentationTask):
         return self.hparams["callbacks"]  # self.callbacks
 
     def configure_models(self):
-        backbone = models.get_model(**self.hparams)
+        backbone = src.models.get_model(**self.hparams)
 
         # add segmentation head
         if self.hparams["segmentation_model"] == "fcn":
-            self.model = segmentation_models.ViTWithFCNHead(
+            self.model = src.models_segmentation.ViTWithFCNHead(
                 backbone,
                 num_classes=self.hparams["num_classes"],
             )
         elif self.hparams["segmentation_model"] == "upernet":
-            self.model = segmentation_models.UPerNetWrapper(
+            self.model = src.models_segmentation.UPerNetWrapper(
                 backbone,
                 self.hparams["feature_map_indices"],
                 num_classes=self.hparams["num_classes"],
@@ -125,7 +113,7 @@ class SegmentationTrainer(torchgeo.trainers.SemanticSegmentationTask):
 
     def training_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
+    ) -> torch.Tensor:
         """Compute the training loss and additional metrics.
 
         Args:
@@ -274,7 +262,7 @@ class SegmentationTrainer(torchgeo.trainers.SemanticSegmentationTask):
 
     def predict_step(
         self, batch: Any, batch_idx: int, dataloader_idx: int = 0
-    ) -> Tensor:
+    ) -> torch.Tensor:
         """Compute the predicted class probabilities.
 
         Args:
@@ -290,7 +278,7 @@ class SegmentationTrainer(torchgeo.trainers.SemanticSegmentationTask):
             y_hat, _ = self(x)
             y_hat = y_hat.softmax(dim=q)
         else:
-            y_hat: Tensor = self(x).softmax(dim=1)
+            y_hat: torch.Tensor = self(x).softmax(dim=1)
         return y_hat
 
     def PIL_imgs_from_batch(self, x, n=4):

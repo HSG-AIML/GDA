@@ -2,28 +2,20 @@
 # Licensed under the MIT License.
 
 """Trainers for image classification linear evaluation."""
-import os
 
-
-os.environ["OMP_NUM_THREADS"] = "4"  # export OMP_NUM_THREADS=4
-os.environ["OPENBLAS_NUM_THREADS"] = "4"  # export OPENBLAS_NUM_THREADS=4
-os.environ["MKL_NUM_THREADS"] = "4"  # export MKL_NUM_THREADS=6
-os.environ["VECLIB_MAXIMUM_THREADS"] = "4"  # export VECLIB_MAXIMUM_THREADS=4
-os.environ["NUMEXPR_NUM_THREADS"] = "4"  # export NUMEXPR_NUM_THREADS=6
-os.environ["GDAL_NUM_THREADS"] = "4"
-
-from typing import Any, Optional
 from functools import partial
+from typing import Any, Optional
 
 import torch
-from torch import Tensor
-import timm
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-
+import torch.optim
+import torch.optim.lr_scheduler
 import torchgeo
 import torchgeo.trainers
-import src.models as models
+
+import src.models
+import src.utils
+
+src.utils.set_resources(num_threads=4)
 
 
 class LinearEvaluationTask(torchgeo.trainers.ClassificationTask):
@@ -36,7 +28,7 @@ class LinearEvaluationTask(torchgeo.trainers.ClassificationTask):
         patch_size: int = 16,
         num_classes: int = 1000,
         loss: str = "ce",
-        class_weights: Optional[Tensor] = None,
+        class_weights: Optional[torch.Tensor] = None,
         pretrain_checkpoint=None,
         lr: float = 1e-3,
         patience: int = 10,
@@ -71,7 +63,7 @@ class LinearEvaluationTask(torchgeo.trainers.ClassificationTask):
         return self.hparams["callbacks"]  # self.callbacks
 
     def configure_models(self):
-        self.model = models.get_model(**self.hparams)
+        self.model = src.models.get_model(**self.hparams)
         if self.hparams["model"] in ["sat_mae", "mae"]:
             self.model.head = torch.nn.Linear(1024, self.hparams["num_classes"])
 
@@ -107,9 +99,11 @@ class LinearEvaluationTask(torchgeo.trainers.ClassificationTask):
             for group in parameters:
                 # group["params"] = [p for p in group["params"] if p.requires_grad]
                 print(f"{sum([p.numel() for p in group['params']])=:,}")
-        optimizer = AdamW(parameters, lr=self.hparams["lr"])
+        optimizer = torch.optim.AdamW(parameters, lr=self.hparams["lr"])
         if self.hparams["use_lr_scheduler"]:
-            scheduler = ReduceLROnPlateau(optimizer, patience=self.hparams["patience"])
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                optimizer, patience=self.hparams["patience"]
+            )
             return {
                 "optimizer": optimizer,
                 "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},

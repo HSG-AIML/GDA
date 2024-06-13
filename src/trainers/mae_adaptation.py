@@ -1,30 +1,18 @@
 """Trainers for image classification linear evaluation."""
-import os
-
-
-os.environ["OMP_NUM_THREADS"] = "4"  # export OMP_NUM_THREADS=4
-os.environ["OPENBLAS_NUM_THREADS"] = "4"  # export OPENBLAS_NUM_THREADS=4
-os.environ["MKL_NUM_THREADS"] = "4"  # export MKL_NUM_THREADS=6
-os.environ["VECLIB_MAXIMUM_THREADS"] = "4"  # export VECLIB_MAXIMUM_THREADS=4
-os.environ["NUMEXPR_NUM_THREADS"] = "4"  # export NUMEXPR_NUM_THREADS=6
-os.environ["GDAL_NUM_THREADS"] = "4"
 
 from typing import Any, Optional
 
-import torch
 import numpy as np
 import PIL
-
+import torch
+import torch.optim.lr_scheduler
 import torchgeo
 import torchgeo.trainers
-from torch.optim.lr_scheduler import (
-    CosineAnnealingLR,
-    LinearLR,
-    SequentialLR,
-    ReduceLROnPlateau,
-)
 
-import src.models as models
+import src.models
+import src.utils
+
+src.utils.set_resources(num_threads=4)
 
 
 class MaskedAutoencoding(torchgeo.trainers.base.BaseTask):
@@ -79,7 +67,7 @@ class MaskedAutoencoding(torchgeo.trainers.base.BaseTask):
         return self.hparams["callbacks"]  # self.callbacks
 
     def configure_models(self):
-        self.model = models.get_model(**self.hparams)
+        self.model = src.models.get_model(**self.hparams)
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(
@@ -89,15 +77,8 @@ class MaskedAutoencoding(torchgeo.trainers.base.BaseTask):
         if self.trainer and self.trainer.max_epochs:
             max_epochs = self.trainer.max_epochs
         warmup_epochs = self.hparams["warmup_epochs"]
-        # scheduler = SequentialLR(
-        #    optimizer,
-        #    schedulers=[
-        #        LinearLR(optimizer, total_iters=warmup_epochs),
-        #        CosineAnnealingLR(optimizer, T_max=max_epochs),
-        #    ],
-        #    milestones=[warmup_epochs],
-        # )
-        scheduler = ReduceLROnPlateau(optimizer, patience=5)
+
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5)
         return {
             "optimizer": optimizer,
             "lr_scheduler": {"scheduler": scheduler, "monitor": self.monitor},

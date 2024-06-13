@@ -1,25 +1,29 @@
-# code based on https://gist.github.com/calebrob6/912c2509de9d94ad6bc924420eca40bb
+"""Trainer to run KNN evaluation.
 
-import os
+code based on https://gist.github.com/calebrob6/912c2509de9d94ad6bc924420eca40bb
+"""
 
+from typing import Tuple, Dict
 
-os.environ["OMP_NUM_THREADS"] = "4"  # export OMP_NUM_THREADS=4
-os.environ["OPENBLAS_NUM_THREADS"] = "4"  # export OPENBLAS_NUM_THREADS=4
-os.environ["MKL_NUM_THREADS"] = "4"  # export MKL_NUM_THREADS=6
-os.environ["VECLIB_MAXIMUM_THREADS"] = "4"  # export VECLIB_MAXIMUM_THREADS=4
-os.environ["NUMEXPR_NUM_THREADS"] = "4"  # export NUMEXPR_NUM_THREADS=6
-os.environ["GDAL_NUM_THREADS"] = "4"
-
-import torch
-import torch.nn.functional as F
 import numpy as np
-from tqdm import tqdm
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
+import torch
+from tqdm import tqdm
+
+import src.utils
+
+src.utils.set_resources(num_threads=4)
 
 
 class KNNEval:
-    def __init__(self, feature_extractor, train_dataloader, val_dataloader, k=5):
+    def __init__(
+        self,
+        feature_extractor: torch.nn.Module,
+        train_dataloader: torch.utils.data.DataLoader,
+        val_dataloader: torch.utils.data.DataLoader,
+        k: int = 5,
+    ):
         self.feature_extractor = feature_extractor
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
@@ -27,7 +31,9 @@ class KNNEval:
         self.knn_model = KNeighborsClassifier(n_neighbors=self.k)
         self.scaler = StandardScaler()
 
-    def get_features(self, loader, device):
+    def get_features(
+        self, loader: torch.utils.data.DataLoader, device: torch.device
+    ) -> Tuple[np.ndarray, np.ndarray]:
         x, y = [], []
         self.feature_extractor.to(device)
         self.feature_extractor.eval()
@@ -51,7 +57,7 @@ class KNNEval:
         y = np.concatenate(y, axis=0)
         return x, y
 
-    def fit_eval(self, device=torch.device("cuda")):
+    def fit_eval(self, device: torch.device = torch.device("cuda")) -> Dict[str, float]:
         x_train, y_train = self.get_features(self.train_dataloader, device=device)
         x_eval, y_eval = self.get_features(self.val_dataloader, device=device)
 
@@ -75,7 +81,11 @@ class KNNEval:
             "knn_eval_acc_scaled": knn_eval_acc_scaled,
         }
 
-    def test(self, dataloader, device=torch.device("cuda")):
+    def test(
+        self,
+        dataloader: torch.utils.data.DataLoader,
+        device: torch.device = torch.device("cuda"),
+    ) -> Dict[str, float]:
         x_test, y_test = self.get_features(dataloader, device=device)
         knn_test_acc = self.knn_model.score(x_test, y_test)
 

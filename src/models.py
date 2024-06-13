@@ -401,19 +401,9 @@ def add_adapter(
         )
 
     else:
-        raise AttributeError(f"type must be in ['lora', 'ia3', 'low-rank-scaling']")
+        raise AttributeError(f"´type´ must be in ['lora', 'ia3', 'low-rank-scaling']")
 
     return model
-
-
-def set_adapter_requires_grad(model, train=True):
-    trainable_params = 0
-    for n, p in model.named_parameters():
-        if "adapter" in n:
-            p.requires_grad = train
-            trainable_params += p.numel()
-
-    return trainable_params
 
 
 def get_vit_l_imagenet(
@@ -509,8 +499,8 @@ def get_scale_mae(
     in_chans: int = 3,
     img_size: int = 224,
     patch_size: int = 16,
-    fixed_output_size=0,
-    use_mask_token=True,
+    fixed_output_size: int = 0,
+    use_mask_token: int = True,
 ):
     """return the scale-mae model"""
 
