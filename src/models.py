@@ -30,7 +30,9 @@ import src.scale_mae.util.pos_embed
 
 
 class ScaledLowRankConvAdapter(torch.nn.Module):
-    def __init__(self, conv2d, hidden_dim=16):
+    """SLR adapter for conv layers."""
+
+    def __init__(self, conv2d: torch.nn.Conv2d, hidden_dim: int = 16):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.proj = conv2d
@@ -55,7 +57,7 @@ class ScaledLowRankConvAdapter(torch.nn.Module):
         for p in self.proj.parameters():
             p.requires_grad = False
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         x_lr = self.up(self.down(x))
         x = self.proj(x)
 
@@ -65,28 +67,35 @@ class ScaledLowRankConvAdapter(torch.nn.Module):
 
 
 class ScaledLowRankAdapter(torch.nn.Module):
-    def __init__(self, linear, hidden_dim=16):
-        """Add a low rank adapter and scaling parameters to a linear layer"""
+    """SLR adapter for linear layers.
+
+    Adds a low rank adapter and scaling parameters to a linear layer"
+    """
+
+    def __init__(self, linear: torch.nn.Linear, hidden_dim: int = 16):
         super().__init__()
 
         self.hidden_dim = hidden_dim
         self.linear = linear
         self.out_dim, self.in_dim = self.linear.weight.shape
 
-        # freeze original layer
+        # freeze original parameters
         for p in self.linear.parameters():
             p.requires_grad = False
 
+        # initialize scaling vectors as ones
         self.in_scaler = torch.nn.Parameter(torch.ones(self.in_dim))
         self.out_scaler = torch.nn.Parameter(torch.ones(self.out_dim))
 
         self.down = torch.nn.Linear(self.in_dim, self.hidden_dim)
         self.up = torch.nn.Linear(self.hidden_dim, self.out_dim)
+
+        # init low-rank matrices as normal/zeros
         self.up.weight.data.fill_(0)
         self.up.bias.data.fill_(0)
         torch.nn.init.normal_(self.down.weight.data)
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         # x *= self.in_scaler
         # x_lr = self.up(self.down(x))
         # x = self.linear(x)
@@ -105,7 +114,9 @@ class ScaledLowRankAdapter(torch.nn.Module):
 
 
 class ScalingConvAdapter(torch.nn.Module):
-    def __init__(self, conv2d, hidden_dim=16):
+    """Scaling adapter for conv layers."""
+
+    def __init__(self, conv2d: torch.nn.Conv2d, hidden_dim: int = 16):
         super().__init__()
 
         self.hidden_dim = hidden_dim
@@ -115,14 +126,16 @@ class ScalingConvAdapter(torch.nn.Module):
         for p in self.proj.parameters():
             p.requires_grad = False
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         x = self.proj(x)
         x *= self.scaler
         return x
 
 
 class ScalingAdapter(torch.nn.Module):
-    def __init__(self, linear, hidden_dim=16):
+    """Scaling adapter for linear layers."""
+
+    def __init__(self, linear: torch.nn.Linear, hidden_dim: int = 16):
         """Add a low rank adapter and scaling parameters to a linear layer"""
         super().__init__()
 
@@ -137,7 +150,7 @@ class ScalingAdapter(torch.nn.Module):
         self.in_scaler = torch.nn.Parameter(torch.ones(self.in_dim))
         # self.out_scaler = torch.nn.Parameter(torch.ones(self.out_dim))
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         x *= self.in_scaler
         x = self.linear(x)
         # x *= self.out_scaler
@@ -146,7 +159,9 @@ class ScalingAdapter(torch.nn.Module):
 
 
 class LowRankAdapter(torch.nn.Module):
-    def __init__(self, linear, hidden_dim=16):
+    """Low-rank adapter for linear layers."""
+
+    def __init__(self, linear: torch.nn.Linear, hidden_dim=16):
         """Add a low rank adapter to a linear layer"""
         super().__init__()
 
@@ -164,7 +179,7 @@ class LowRankAdapter(torch.nn.Module):
         self.up.bias.data.fill_(0)
         torch.nn.init.normal_(self.down.weight.data)
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         x_lr = self.up(self.down(x))
         x = self.linear(x)
 
@@ -172,7 +187,9 @@ class LowRankAdapter(torch.nn.Module):
 
 
 class LowRankConvAdapter(torch.nn.Module):
-    def __init__(self, conv2d, hidden_dim=16):
+    """Low-rank adapter for conv layers."""
+
+    def __init__(self, conv2d: torch.nn.Conv2d, hidden_dim: int = 16):
         super().__init__()
         self.hidden_dim = hidden_dim
         self.proj = conv2d
@@ -196,7 +213,7 @@ class LowRankConvAdapter(torch.nn.Module):
         for p in self.proj.parameters():
             p.requires_grad = False
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         x_lr = self.up(self.down(x))
         x = self.proj(x)
 
@@ -205,22 +222,9 @@ class LowRankConvAdapter(torch.nn.Module):
         return x
 
 
-class PatchEmbedAdapter(torch.nn.Module):
-    def __init__(self, model):
-        super().__init__()
-        self.img_size = model.patch_embed.img_size[0]
-        self.patch_size = model.patch_embed.patch_size[0]
-        self.in_chans = model.patch_embed.proj.weight.shape[1]
-        self.embed_dim = model.patch_embed.proj.weight.shape[0]
-        self.adapter = timm.models.layers.patch_embed.PatchEmbed(
-            self.img_size, self.patch_size, self.in_chans, self.embed_dim
-        )
-
-    def forward(self, x):
-        return self.adapter(x)
-
-
 class IA3ConfigTimmViT:
+    """Config to add IA3 adapters to a timm ViT."""
+
     def __init__(self):
         self.lora_scaling_rank = 1
         self.lora_rank = 0
@@ -232,7 +236,11 @@ class IA3ConfigTimmViT:
 
 
 class ScaledLowRankConfigTimmViT:
-    def __init__(self, hidden_dim=8, patch_embed=False, norm=True):
+    """Config to add SLR adapters to a timm ViT."""
+
+    def __init__(
+        self, hidden_dim: int = 8, patch_embed: bool = False, norm: bool = True
+    ):
         self.lora_rank = hidden_dim
         self.adapter_modules = ".*attn|.*mlp|decoder_embed|decoder_pred"
         self.adapter_layers = "qkv|fc1|fc2|proj|decoder_embed|decoder_pred"
@@ -248,7 +256,11 @@ class ScaledLowRankConfigTimmViT:
 
 
 class LowRankConfigTimmViT:
-    def __init__(self, hidden_dim=8, patch_embed=False, norm=True):
+    """Config to add low-rank adapters to a timm ViT."""
+
+    def __init__(
+        self, hidden_dim: int = 8, patch_embed: bool = False, norm: bool = True
+    ):
         self.lora_rank = hidden_dim
         self.adapter_modules = ".*attn|.*mlp|decoder_embed|decoder_pred"
         self.adapter_layers = "qkv|fc1|fc2|proj|decoder_embed|decoder_pred"
@@ -264,7 +276,11 @@ class LowRankConfigTimmViT:
 
 
 class ScalingConfigTimmViT:
-    def __init__(self, hidden_dim=8, patch_embed=False, norm=True):
+    """Config to add scaling adapters to a timm ViT."""
+
+    def __init__(
+        self, hidden_dim: int = 8, patch_embed: bool = False, norm: bool = True
+    ):
         self.lora_rank = hidden_dim
         self.adapter_modules = ".*attn|.*mlp|decoder_embed|decoder_pred"
         self.adapter_layers = "qkv|fc1|fc2|proj|decoder_embed|decoder_pred"
@@ -277,43 +293,6 @@ class ScalingConfigTimmViT:
             self.extra_trainable_param_names += "|.*norm.*"
         # self.extra_trainable_param_names = ".*norm.*|.*decoder_embed.*|.*decoder_pred.*"
         # self.extra_trainable_param_names = ".*norm.*|.*decoder_embed.*"
-
-
-def add_scaled_low_rank_weights(model, config):
-    # together with config of type ScaledLowRankConfigTimmViT
-    for m_name, module in dict(model.named_modules()).items():
-        if re.fullmatch(config.adapter_modules, m_name):
-            children = dict(module.named_children())
-            set_as_module = False
-            if not children:
-                set_as_module = True
-                # if module is a layer
-                children = {m_name: module}
-            for c_name, layer in children.items():
-                if re.fullmatch(config.adapter_layers, c_name):
-                    assert isinstance(layer, torch.nn.Linear)
-                    if set_as_module:
-                        setattr(
-                            model,
-                            c_name,
-                            ScaledLowRankAdapter(layer, hidden_dim=config.lora_rank),
-                        )
-                    else:
-                        setattr(
-                            module,
-                            c_name,
-                            ScaledLowRankAdapter(
-                                layer,
-                                hidden_dim=config.lora_rank,
-                            ),
-                        )
-
-        # make extra params trainable (e.g., layer norm layers)
-        if re.fullmatch(config.extra_trainable_param_names, m_name):
-            for p in module.parameters():
-                p.requires_grad = True
-
-    return model
 
 
 def add_extra_weights(
@@ -364,38 +343,17 @@ def add_extra_weights(
     return model
 
 
-def add_ia3_weights(model, config):
-    # note this does not set requires_grad correctly, see `add_adapter`
-    for m_name, module in dict(model.named_modules()).items():
-        if re.fullmatch(config.lora_modules, m_name):
-            for c_name, layer in dict(module.named_children()).items():
-                if re.fullmatch(config.lora_layers, c_name):
-                    assert isinstance(layer, torch.nn.Linear)
-                    setattr(
-                        module,
-                        c_name,
-                        src.t_few_lora.LoRALinear(
-                            layer,
-                            config.lora_rank,
-                            config.lora_scaling_rank,
-                            config.lora_init_scale,
-                        ),
-                    )
-
-    return model
-
-
 def add_adapter(
-    model,
-    type="lora",
-    shared=True,
-    scale=1,
-    hidden_dim=8,
-    patch_embed_adapter=False,
-    adapter_trainable=True,
-    norm_trainable=True,
-    only_scaler_trainable=False,
-):
+    model: torch.nn.Module,
+    type: str = "lora",
+    shared: bool = True,
+    scale: int = 1,
+    hidden_dim: int = 8,
+    patch_embed_adapter: bool = False,
+    adapter_trainable: bool = True,
+    norm_trainable: bool = True,
+    only_scaler_trainable: bool = False,
+) -> torch.nn.Module:
     if type == "lora":
         config = LowRankConfigTimmViT(
             hidden_dim=hidden_dim,
@@ -433,7 +391,6 @@ def add_adapter(
             patch_embed=patch_embed_adapter,
             norm=norm_trainable,
         )
-        # model = add_scaled_low_rank_weights(model, config)
         model = add_extra_weights(
             model,
             config,
@@ -546,12 +503,12 @@ def get_mae(
 
 
 def get_scale_mae(
-    model_type,
-    pretrained=True,
-    num_classes=1000,
-    in_chans=3,
-    img_size=224,
-    patch_size=16,
+    model_type: str,
+    pretrained: bool = True,
+    num_classes: int = 1000,
+    in_chans: int = 3,
+    img_size: int = 224,
+    patch_size: int = 16,
     fixed_output_size=0,
     use_mask_token=True,
 ):
