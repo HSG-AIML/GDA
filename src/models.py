@@ -1,3 +1,5 @@
+"""Model definitions."""
+
 import functools
 import re
 
@@ -25,42 +27,6 @@ import src.sat_mae.models_vit_group_channels
 import src.scale_mae.models_mae
 import src.scale_mae.models_vit
 import src.scale_mae.util.pos_embed
-
-
-class ResidualSequential(torch.nn.Module):
-    def __init__(self, module1, module2, scale=1):
-        super().__init__()
-        self.module1 = module1
-        self.module2 = module2
-        self.scale = scale
-        self.__dict__.update(
-            {
-                k: v
-                for k, v in module1.__dict__.items()
-                if not k.startswith("_") and k not in self.__dict__.keys()
-            }
-        )
-        self.__dict__.update(
-            {
-                k: v
-                for k, v in module2.__dict__.items()
-                if not k.startswith("_") and k not in self.__dict__.keys()
-            }
-        )
-
-    def forward(self, x):
-        return self.module1(x) + self.scale * self.module2(x)
-
-
-class Adapter(torch.nn.Module):
-    def __init__(self, in_dim, out_dim, hidden_dim=16):
-        super().__init__()
-        self.adapter_down = torch.nn.Linear(in_dim, hidden_dim)
-        self.adapter_up = torch.nn.Linear(hidden_dim, out_dim)
-        self.adapter_act = torch.nn.ReLU()
-
-    def forward(self, x):
-        return self.adapter_up(self.adapter_act(self.adapter_down(x)))
 
 
 class ScaledLowRankConvAdapter(torch.nn.Module):
@@ -252,11 +218,6 @@ class PatchEmbedAdapter(torch.nn.Module):
 
     def forward(self, x):
         return self.adapter(x)
-
-
-# def add_patch_embed_adapter(model, scale=1):
-#     adapter = PatchEmbedAdapter(model)
-#     model.patch_embed = ResidualSequential(model.patch_embed, adapter, scale=scale)
 
 
 class IA3ConfigTimmViT:
@@ -989,10 +950,5 @@ def get_model(**hparams):
     if hparams["train_cls_mask_tokens"]:
         model.cls_token.requires_grad = True
         model.mask_token.requires_grad = True
-
-    # print("Trainable params:")
-    # for n, p in model.named_parameters():
-    #     if p.requires_grad:
-    #         print(n, p.numel())
 
     return model
