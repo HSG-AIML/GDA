@@ -1,8 +1,8 @@
+"""From timm==0.9.8"""
+
 import torch
 import torch.nn.functional as F
 import math
-
-# from timm v0.9.8
 
 
 def resample_abs_pos_embed(

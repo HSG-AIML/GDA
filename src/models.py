@@ -7,7 +7,6 @@ import timm
 import torch
 
 import src.utils
-import src.t_few_lora
 import src.pos_embed
 import src.patch_embed
 

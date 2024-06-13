@@ -1,8 +1,9 @@
+"""From timm==0.9.8"""
+
 import torch
 import torch.nn.functional as F
 
 
-# from timm v0.9.8
 def resample_patch_embed(
     patch_embed,
     new_size,
