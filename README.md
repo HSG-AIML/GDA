@@ -43,7 +43,7 @@ Where possible, use [torchgeo](https://github.com/microsoft/torchgeo) implementa
 
 # Acknowledgements
 If you would like to reference our work, please use the following reference:
-```
+```bibtex
 @InProceedings{Scheibenreif_2024_CVPR,
     author    = {Scheibenreif, Linus and Mommert, Michael and Borth, Damian},
     title     = {Parameter Efficient Self-Supervised Geospatial Domain Adaptation},
