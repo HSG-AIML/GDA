@@ -17,7 +17,7 @@ import src.trainers
 import src.utils
 
 src.utils.set_resources(
-    num_threads=4, wand_cache_dir="/netscratch/lscheibenreif/code/low-rank-da/cache/"
+    num_threads=4, wand_cache_dir="./cache/"
 )
 
 

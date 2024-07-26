@@ -96,7 +96,7 @@ class Dotdict:
 
 def setup_wandb(
     config: Dotdict,
-) -> Tuple[wandb.Run, lightning.pytorch.loggers.WandbLogger, Dotdict]:
+) -> Tuple[wandb.run, lightning.pytorch.loggers.WandbLogger, Dotdict]:
     """Sets up wandb logging for a training run.
 
     This will run wandb.init with arguments based on the config and store
@@ -418,7 +418,7 @@ def get_config_from_wandb_run(
 
 
 def load_weights_from_wandb_run(
-    model: torch.module,
+    model: torch.nn.Module,
     config: Dotdict,
     prefix: str = None,
     run_id_key: str = "continual_pretrain_run",

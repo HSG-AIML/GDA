@@ -12,7 +12,22 @@ As large-scale foundation models become publicly available for different domains
 
 # Getting Started
 This codebase provides scripts to add SLR adapters to existing, trained, visual foundation models before fine-tuning them on different downstream tasks. To get started, make sure that the trained weights for a visual foundation model are available in the ´checkpoints/´ directory and download a dataset for training.
-See below for the models and datasets used in the paper: 
+See below for the models and datasets used in the paper. 
+
+## Training SLR adapters
+Follow these steps to add and train SLR adapters for one of the supported foundation model / dataset combinations.
+* Update the configuration at ´configs/mae/experiment.yaml´ with the following values:
+    * ´wandb.entity´: your wandb id
+    * ´data.datamodule´: class name of the desired datamodule (see ´src/datamodules for all supported options)
+    * ´data.modality´ if the chosen dataset contains multiple modalities, choose one here.
+    * ´data.size´ similarly, if the dataset has different resolutions (e.g., TreeSatAI), set one here. 
+    * ´data.root´ set to the parent directory of the dataset.
+    * ´model.name´ sets the foundation model, supported options are ´mae´, ´sat_mae´, and ´scale_mae´.
+    * to change the bottleneck dimensionality of the low-rank adapters (called *r* in the paper), set ´model.adapter_hidden_dim`. 
+    * finally, change all other settings (e.g., learning rate or patch size) as you wish.
+* Start the training run with `python main_mae.py´. 
+
+
 
 ## Models
 **MAE**

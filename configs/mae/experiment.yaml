@@ -10,11 +10,11 @@ wandb:
   experiment_dir: logs/mae
   cache_dir: cache/
 data:
-  datamodule: Caltech256DataModule # BENGEDataModule # TreeSatAIDataModule # OSCDDataModule # DeepGlobeLandCoverDataModule # EuroSATSARDataModule # UCMercedDataModule # EuroSATSARDataModule # TreeSatAIDataModule # FireRiskDataModule # BENGEDataModule # RESISC45DataModule #TreeSatAIDataModule #EuroSATDataModule #FireRiskDataModule # RESISC45DataModule #BENGEDataModule #EuroSATDataModule
+  datamodule: EuroSATSARDataModule # BENGEDataModule # TreeSatAIDataModule # OSCDDataModule # DeepGlobeLandCoverDataModule # EuroSATSARDataModule # UCMercedDataModule # EuroSATSARDataModule # TreeSatAIDataModule # FireRiskDataModule # BENGEDataModule # RESISC45DataModule #TreeSatAIDataModule #EuroSATDataModule #FireRiskDataModule # RESISC45DataModule #BENGEDataModule #EuroSATDataModule
   modality: s1 #aerial #s1
   size: 6 #20
-  root: data/ #/netscratch/lscheibenreif/ben-ge-8k  # data/treesatai # deepglobe # # data/ # data/EuroSAT-SAR # data/ data/treesatai/ #
-  bands: null #[VV, VH, VV] # [NIR, R, G, B] #  #  #  # [B04, B03, B02] #  # # [VV, VH, VV/VH] # #  # #  #[B01, B02, B03, B04, B05, B06, B07, B08, B08A, B09, B11, B12] # [B04,B03,B02]
+  root: data/EuroSAT-SAR #/netscratch/lscheibenreif/ben-ge-8k  # data/treesatai # deepglobe # # data/ # data/EuroSAT-SAR # data/ data/treesatai/ #
+  bands: [VV, VH, VV] # [NIR, R, G, B] #  #  #  # [B04, B03, B02] #  # # [VV, VH, VV/VH] # #  # #  #[B01, B02, B03, B04, B05, B06, B07, B08, B08A, B09, B11, B12] # [B04,B03,B02]
   num_classes: 256 # 15 #7 #45 # 10 # 11
   img_size: 224
   few_shot_k: null
