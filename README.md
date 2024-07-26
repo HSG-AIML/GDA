@@ -25,7 +25,7 @@ Follow these steps to add and train SLR adapters for one of the supported founda
     * `wandb.entity`: your wandb id
     * `data.datamodule`: class name of the desired datamodule (see `src/datamodules` for all supported options)
     * `data.modality` if the chosen dataset contains multiple modalities, choose one here.
-    * `data.size` similarly, if the dataset has different resolutions (e.g., TreeSatAI), set one here. 
+    * `data.size` similarly, if the dataset contains images of different sizes, choose one here (e.g., TreeSatAI). 
     * `data.root` set to the parent directory of the dataset.
     * `model.name` sets the foundation model, supported options are `mae`, `sat_mae`, and `scale_mae`.
     * to change the bottleneck dimensionality of the low-rank adapters (called *r* in the paper), set `model.adapter_hidden_dim`. 
@@ -41,6 +41,10 @@ To evaluate a model with trained SLR adapters, follow these steps.
     * `data.*` make sure the data configuration matches your run from Step 2 above (now you also need to set the number of classes in the dataset). Optionally, few-shot experiments can be run by setting `few_shot_k` and a `few_shot_seed`. 
     * `model.*` settings need to match the pre-training run.
 * Start the training run with `python main_linear_eval.py`.
+
+## Evaluation on the test set
+
+To test fine-tuned models (i.e., after Step 3), create a file containing all wandb run ids that should be tested (see `configs/run_ids.csv` for a template). This can also only contain one line in addition to the column names. Then poin the `run_id_file` variable in `main_test_checkpoints.py` to that file. Finally, run `python main_test_checkpoints.py` to run the tests. Results will be written to files in the `logs/tests/` directory.
 
 
 ## Models
