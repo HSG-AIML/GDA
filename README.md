@@ -8,10 +8,15 @@ Authors: [Linus Scheibenreif](https://scheibenreif.github.io)    [Michael Mommer
 ![Overview image](assets/overview_v2.jpg "Method Overview")
 
 # Background
-As large-scale foundation models become publicly available for different domains efficiently adapting them to individual downstream applications and additional data modalities has turned into a central challenge. For example foundation models for geospatial and satellite remote sensing applications are commonly trained on large optical RGB or multi-spectral datasets although data from a wide variety of heterogeneous sensors are available in the remote sensing domain. This leads to significant discrepancies between pre-training and downstream target data distributions for many important applications. Fine-tuning large foundation models to bridge that gap incurs high computational cost and can be infeasible when target datasets are small. In this paper we address the question of how large pre-trained foundational transformer models can be efficiently adapted to downstream remote sensing tasks involving different data modalities or limited dataset size. We present a self-supervised adaptation method that boosts downstream linear evaluation accuracy of different foundation models by 4-6% (absolute) across 8 remote sensing datasets while outperforming full fine-tuning when training only 1-2% of the model parameters. Our method significantly improves label efficiency and increases few-shot accuracy by 6-10% on different datasets.
+This work proposes a three-step approach to adapt geospatial foundation models to new dataset modalities (see figure above):
+1. Add SLR adapter parameters to the pre-trained foundation model.
+2. Train the adapters via self-supervised masked image modeling on unlabeled data from the target *domain*.
+3. Fine-tune the adapters supervised for the target *task*.
+
+This codebase includes scripts to train and evaluate different geospatial foundation models on a number of remote sensing datasets.
 
 # Getting Started
-This codebase provides scripts to add SLR adapters to existing, trained, visual foundation models before fine-tuning them on different downstream tasks. To get started, make sure that the trained weights for a visual foundation model are available in the ´checkpoints/´ directory and download a dataset for training.
+This codebase provides scripts to add SLR adapters to existing, trained, visual foundation models before fine-tuning them on different downstream tasks. To get started, make sure that the trained weights for a visual foundation model are available in the `checkpoints/` directory and download a dataset for training (either via the `torchgeo` library or through the links provided below).
 See below for the models and datasets used in the paper. 
 
 ## Training SLR adapters (Steps 1 + 2)
@@ -27,9 +32,15 @@ Follow these steps to add and train SLR adapters for one of the supported founda
     * finally, change all other settings (e.g., learning rate or patch size) as you wish.
 * Start the training run with `python main_mae.py`. 
 
+Details about the training run will be logged to weights and biases and stored in the `outputs/` directory.
+
 ## Fine-tuning / Linear eval (Step 3)
 To evaluate a model with trained SLR adapters, follow these steps.
-* Update the configuration at `configs/lin_eval/experiment.yaml`.
+* Update the configuration at `configs/lin_eval/experiment.yaml`:
+    * `continual_pretrain_run` set the wandb run id of the SLR adapter pre-training run (see step above).
+    * `data.*` make sure the data configuration matches your run from Step 2 above (now you also need to set the number of classes in the dataset). Optionally, few-shot experiments can be run by setting `few_shot_k` and a `few_shot_seed`. 
+    * `model.*` settings need to match the pre-training run.
+* Start the training run with `python main_linear_eval.py`.
 
 
 ## Models
