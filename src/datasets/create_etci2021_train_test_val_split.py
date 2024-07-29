@@ -11,9 +11,7 @@ if __name__ == "__main__":
     seed = 0
     random.seed(seed)
 
-    dm = ETCI2021DataModule(
-        root="/netscratch/lscheibenreif/code/low-rank-da/data/etci2021"
-    )
+    dm = ETCI2021DataModule(root="data/etci2021")
     dm.setup("fit")
 
     files = np.array(dm.val_dataset.files)
@@ -28,14 +26,10 @@ if __name__ == "__main__":
     valset = files[val_indices].tolist()
     testset = files[test_indices].tolist()
 
-    with open(
-        "/netscratch/lscheibenreif/code/low-rank-da/data/etci2021-val.txt", "w"
-    ) as f:
+    with open("data/etci2021-val.txt", "w") as f:
         for line in valset:
             f.write(str(line) + "\n")
 
-    with open(
-        "/netscratch/lscheibenreif/code/low-rank-da/data/etci2021-test.txt", "w"
-    ) as f:
+    with open("data/etci2021-test.txt", "w") as f:
         for line in testset:
             f.write(str(line) + "\n")

@@ -28,9 +28,7 @@ if __name__ == "__main__":
 
     random.seed(seed)
 
-    dataset = torchgeo.datasets.ETCI2021(
-        root="/netscratch/lscheibenreif/code/low-rank-da/data/etci2021"
-    )
+    dataset = torchgeo.datasets.ETCI2021(root="data/etci2021")
 
     samples = dataset.files
 

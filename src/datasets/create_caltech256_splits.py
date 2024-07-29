@@ -16,15 +16,13 @@ ds = torchvision.datasets.Caltech256(root="data", download=False)
 
 samples = defaultdict(list)
 count = 0
-for category in os.listdir(
-    "/netscratch/lscheibenreif/code/low-rank-da/data/caltech256/256_ObjectCategories"
-):
+for category in os.listdir("data/caltech256/256_ObjectCategories"):
     if category == "257.clutter":
         # remove clutter class
         continue
     for sample in os.listdir(
         os.path.join(
-            "/netscratch/lscheibenreif/code/low-rank-da/data/caltech256/256_ObjectCategories/",
+            "data/caltech256/256_ObjectCategories/",
             category,
         )
     ):
@@ -34,18 +32,14 @@ for category in os.listdir(
 print(f"Total number of used samples: {count:,}")
 
 
-with open(
-    "/netscratch/lscheibenreif/code/low-rank-da/data/caltech256-all.txt", "w"
-) as all_writer:
-    with open(
-        "/netscratch/lscheibenreif/code/low-rank-da/data/caltech256-train.txt", "w"
-    ) as train_writer:
+with open("data/caltech256-all.txt", "w") as all_writer:
+    with open("data/caltech256-train.txt", "w") as train_writer:
         with open(
-            "/netscratch/lscheibenreif/code/low-rank-da/data/caltech256-val.txt",
+            "data/caltech256-val.txt",
             "w",
         ) as val_writer:
             with open(
-                "/netscratch/lscheibenreif/code/low-rank-da/data/caltech256-test.txt",
+                "data/caltech256-test.txt",
                 "w",
             ) as test_writer:
                 for category, cat_samples in samples.items():

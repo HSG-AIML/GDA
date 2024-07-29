@@ -27,24 +27,24 @@ if __name__ == "__main__":
     ]
 
     with open(
-        "/netscratch/lscheibenreif/code/low-rank-da/data/treesatai/test_filenames.lst",
+        "data/treesatai/test_filenames.lst",
         "r",
     ) as f:
         files = [l.strip() for l in f.readlines()]
 
     with open(
-        "/netscratch/lscheibenreif/code/low-rank-da/data/treesatai/train_filenames.lst",
+        "data/treesatai/train_filenames.lst",
         "r",
     ) as f:
         all_train_files = [l.strip() for l in f.readlines()]
 
     print(f"{len(files)=}, {len(all_train_files)=}")
     with open(
-        "/netscratch/lscheibenreif/code/low-rank-da/data/treesatai/train_filenames_new.lst",
+        "data/treesatai/train_filenames_new.lst",
         "w",
     ) as new_train_file:
         with open(
-            "/netscratch/lscheibenreif/code/low-rank-da/data/treesatai/val_filenames.lst",
+            "data/treesatai/val_filenames.lst",
             "w",
         ) as val_file:
             for c in names:

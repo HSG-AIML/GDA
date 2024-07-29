@@ -23,7 +23,7 @@ if __name__ == "__main__":
     for c in names:
         filenames = glob.glob(
             os.path.join(
-                f"/netscratch/lscheibenreif/code/low-rank-da/data/FireRisk/val/{c}/*.png"
+                f"data/FireRisk/val/{c}/*.png"
             )
         )
         chosen_files = random.sample(filenames, int(0.5 * len(filenames)))

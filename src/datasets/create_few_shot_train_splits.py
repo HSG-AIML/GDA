@@ -28,9 +28,7 @@ if __name__ == "__main__":
 
     random.seed(seed)
 
-    dataset = torchgeo.datasets.__dict__[dataset_name](
-        root="/netscratch/lscheibenreif/code/low-rank-da/data"
-    )
+    dataset = torchgeo.datasets.__dict__[dataset_name](root="data/")
     class_path_map = defaultdict(list)
 
     for path, c in dataset.samples:
