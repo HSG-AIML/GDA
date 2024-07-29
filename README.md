@@ -16,7 +16,7 @@ This work proposes a three-step approach to adapt geospatial foundation models t
 This codebase includes scripts to train and evaluate different geospatial foundation models on a number of remote sensing datasets.
 
 # Getting Started
-This codebase provides scripts to add SLR adapters to existing, trained, visual foundation models before fine-tuning them on different downstream tasks. To get started, make sure that the trained weights for a visual foundation model are available in the `checkpoints/` directory and download a dataset for training (either via the `torchgeo` library or through the links provided below).
+This codebase provides scripts to add SLR adapters to existing, trained, visual foundation models before fine-tuning them on different downstream tasks. To get started, make sure that the trained weights for a visual foundation model are available in the `checkpoints/` directory and download a dataset for training (either via the `torchgeo` library or through the links provided below). For each foundation model, the pre-trained weights should be stored in a different sub-directory (`checkpoints/{mae, sat-mae, scale-mae}`)
 See below for the models and datasets used in the paper. 
 
 ## Training SLR adapters (Steps 1 + 2)
@@ -69,8 +69,8 @@ Where possible, use [torchgeo](https://github.com/microsoft/torchgeo) implementa
 
 
 # Dependencies
+* see `requirements.txt`
 * `torchgeo==0.5.0`
-* `timm==0.6.12`
 * `torch==2.0.1`
 
 

@@ -435,7 +435,7 @@ def get_mae(
         if pretrained:
             # checkpoint with decode head
             checkpoint = torch.load(
-                "/netscratch/lscheibenreif/code/low-rank-da/checkpoints/mae/mae_visualize_vit_large.pth",
+                "checkpoints/mae/mae_visualize_vit_large.pth",
                 map_location=torch.device("cpu"),
             )
             ckpt_patch_embed_weight = checkpoint["model"]["patch_embed.proj.weight"]
@@ -479,7 +479,7 @@ def get_mae(
         model = src.mae.models_vit.vit_large_patch16(in_chans=in_chans)
         if pretrained:
             checkpoint = torch.load(
-                "/netscratch/lscheibenreif/code/low-rank-da/checkpoints/mae/mae_pretrain_vit_large.pth"
+                "checkpoints/mae/mae_pretrain_vit_large.pth"
             )
             if in_chans != 3:
                 del checkpoint["model"]["patch_embed.proj.weight"]
@@ -504,7 +504,7 @@ def get_scale_mae(
     """return the scale-mae model"""
 
     checkpoint = torch.load(
-        "/netscratch/lscheibenreif/code/low-rank-da/checkpoints/scale-mae/scalemae-vitlarge-800.pth",
+        "checkpoints/scale-mae/scalemae-vitlarge-800.pth",
         map_location=torch.device("cpu"),
     )
     args = checkpoint["args"]
@@ -648,24 +648,24 @@ def get_sat_mae(
     model_type: in ["", "temporal", "group_c"]
     returns: model and args (Namespace)
     """
-    assert timm.__version__ in [
-        "0.3.2",
-        "0.6.12",
-    ], f"timm version mismatch: {timm.__version__} != 0.3.2"
+    # assert timm.__version__ in [
+    #     "0.3.2",
+    #     "0.6.12",
+    # ], f"timm version mismatch: {timm.__version__} != 0.3.2 or 0.6.12"
 
     if model_type == "temporal":
         checkpoint = torch.load(
-            "/netscratch/lscheibenreif/code/low-rank-da/checkpoints/sat-mae/pretrain_fmow_temporal.pth",
+            "checkpoints/sat-mae/pretrain_fmow_temporal.pth",
             map_location=torch.device("cpu"),
         )
     elif model_type == "group_c":
         checkpoint = torch.load(
-            "/netscratch/lscheibenreif/code/low-rank-da/checkpoints/sat-mae/pretrain_vit_large_group_c.pth"
+            "checkpoints/sat-mae/pretrain_vit_large_group_c.pth"
         )
     else:
         # standard non temporal/spectral pre-trained checkpoint
         checkpoint = torch.load(
-            "/netscratch/lscheibenreif/code/low-rank-da/checkpoints/sat-mae/fmow_pretrain.pth"
+            "checkpoints/sat-mae/fmow_pretrain.pth"
         )
 
     args = checkpoint["args"]
