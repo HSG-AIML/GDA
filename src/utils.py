@@ -114,6 +114,9 @@ def setup_wandb(
 
     os.environ["WANDB_CACHE_DIR"] = config.wandb.cache_dir
 
+    if not os.path.exists(config.wandb.experiment_dir):
+        os.makedirs(config.wandb.experiment_dir)
+
     run = wandb.init(
         mode=config.wandb.mode,
         entity=config.wandb.entity,
